@@ -1,40 +1,32 @@
 import React, {Component, createRef} from 'react';
+import Tippy from '@tippyjs/react';
+import getCaretCoordinates from 'textarea-caret'
+
+import 'tippy.js/dist/tippy.css'; // optional
 import './App.scss';
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Form from "react-bootstrap/Form"
-import Tooltip from "react-bootstrap/Tooltip";
-import Overlay from "react-bootstrap/Overlay";
-const getCaretCoordinates = require('textarea-caret');
 
 class App extends Component {
   constructor(props) {
-    super(props);
-    this.state = {};
-    this.anchor = createRef();
+    super(props)
+    this.state = {}
+  }
 
-    this.renderPopover = this.renderPopover.bind(this)
+  updateTooltip(target) {
+    const text = target.value;
+    const start = target.selectionStart;
+    const end = target.selectionEnd;
+    const selectedText = text.substring(start, end);
+    // TODO calculate center of selected text. Or even better, size the anchor div to the selection.
+    const {top: caretTop, left: caretLeft, height: anchorHeight} = getCaretCoordinates(target, end);
+    const anchorTop = target.offsetTop - target.scrollTop + caretTop;
+    const anchorLeft = target.offsetLeft - target.scrollLeft + caretLeft;
+    this.setState({text, selectedText, start, end, anchorTop, anchorLeft, anchorHeight})
   }
 
   handleChange = (event) => {
-    const text = event.target.value;
-    const start = event.target.selectionStart;
-    const end = event.target.selectionEnd;
-    const selectedText = text.substring(start, end);
-    const pos = end;  // TODO calculate center of selected text. Or even better, size the anchor div to the selection.
-    const {top: caretTop, left: caretLeft, height: caretHeight} = getCaretCoordinates(event.target, pos);
-    const top = event.target.offsetTop - event.target.scrollTop + caretTop;
-    const left = event.target.offsetLeft - event.target.scrollLeft + caretLeft;
-    this.setState({text, selectedText, start, end, top, left})
-
+    const target=event.target
+    this.updateTooltip(target)
   };
-
-  renderPopover(props) {
-    return <Tooltip id="tooltip" {...props}>
-      Simple tooltip
-    </Tooltip>
-  }
 
   renderAnchor() {
     return <div
@@ -43,34 +35,32 @@ class App extends Component {
         style={
           {
             position: 'absolute',
-            top: `${this.state.top}px`,
-            left: `${this.state.left}px`
+            top: `${this.state.anchorTop}px`,
+            left: `${this.state.anchorLeft}px`,
+            height: `${this.state.anchorHeight}px`,
+            background: 'red',
+            width: '3px'
           }
         }/>
   }
 
   render () {
-    return <Container fluid="xl" className="pt-5">
-      <Row>
-        <Col>
-          <Form.Control
-              size="lg" as="textarea" rows="10"  value={this.state.value}
+    return <>
+      <textarea
+              value={this.state.value}
               onChange={this.handleChange}
               onKeyDown={this.handleChange}
               onClick={this.handleChange}
-          />
-          {this.renderAnchor()}
-          <Overlay container={this.anchor.current} show={true} target={this.anchor.current}>
-            {this.renderPopover()}
-          </Overlay>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
-          <p>Selection: {this.state.selectedText}, Range: {this.state.start}/{this.state.end}, Position: {this.state.top}/{this.state.left}</p>
-        </Col>
-      </Row>
-    </Container>
+      />
+      <Tippy
+          arrow={true}
+          visible={true}
+          content={`Selection: ${this.state.selectedText}, Range: ${this.state.start}/${this.state.end}, Position: ${this.state.anchorTop}/${this.state.anchorLeft}`}
+          placement="top"
+      >
+      {this.renderAnchor()}
+      </Tippy>
+      </>
   }
 }
 
