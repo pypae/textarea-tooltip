@@ -17,10 +17,13 @@ class App extends Component {
     const end = target.selectionEnd;
     const selectedText = text.substring(start, end);
     // TODO calculate center of selected text. Or even better, size the anchor div to the selection.
-    const {top: caretTop, left: caretLeft, height: anchorHeight} = getCaretCoordinates(target, end);
-    const anchorTop = target.offsetTop - target.scrollTop + caretTop;
-    const anchorLeft = target.offsetLeft - target.scrollLeft + caretLeft;
-    this.setState({text, selectedText, start, end, anchorTop, anchorLeft, anchorHeight})
+    const {top: startTop, left: startLeft, height: anchorHeight} = getCaretCoordinates(target, start);
+    const {top: endTop, left: endLeft} = getCaretCoordinates(target, end);
+    const anchorWidth = (startTop === endTop) ? endLeft - startLeft: 0 // TODO
+    const anchorTop = target.offsetTop - target.scrollTop + startTop;
+    const anchorLeft = target.offsetLeft - target.scrollLeft + startLeft;
+    console.log(anchorWidth, anchorHeight, anchorLeft, anchorTop)
+    this.setState({text, selectedText, start, end, anchorTop, anchorLeft, anchorHeight, anchorWidth})
   }
 
   handleChange = (event) => {
@@ -38,8 +41,8 @@ class App extends Component {
             top: `${this.state.anchorTop}px`,
             left: `${this.state.anchorLeft}px`,
             height: `${this.state.anchorHeight}px`,
-            background: 'red',
-            width: '3px'
+            //background: 'red',
+            width: `${this.state.anchorWidth}px`
           }
         }/>
   }
